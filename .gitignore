@@ -1,0 +1,36 @@
+# ── Dependencies ─────────────────────────────────────
+node_modules/
+.npm
+
+# ── Build output ─────────────────────────────────────
+dist/
+build/
+
+# ── Environment secrets ───────────────────────────────
+# NEVER commit this — has your passwords
+.env
+.env.local
+.env.production
+
+# ── Logs ─────────────────────────────────────────────
+*.log
+npm-debug.log*
+logs/
+
+# ── OS files ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── VS Code ───────────────────────────────────────────
+.vscode/
+*.code-workspace
+
+# ── Docker ───────────────────────────────────────────
+docker-compose.override.yml
+
+# ── TypeScript ────────────────────────────────────────
+*.tsbuildinfo
+
+# ── Test coverage ─────────────────────────────────────
+coverage/
