@@ -21,13 +21,11 @@ export async function castVote(
   const poll = rows[0]
 
   // Step 2: Has the poll expired?
-  // Like checking if a restaurant is still open before ordering
   if (new Date(poll.expires_at) < new Date()) {
     return { success: false, message: 'Poll has expired' }
   }
 
   // Step 3: Is the option index valid?
-  // e.g. if there are 3 options, valid indexes are 0, 1, 2
   const options = poll.options as string[]
   if (optionIdx < 0 || optionIdx >= options.length) {
     return { success: false, message: 'Invalid option selected' }
@@ -39,15 +37,18 @@ export async function castVote(
       `INSERT INTO votes (poll_id, user_id, option_idx) VALUES ($1, $2, $3)`,
       [pollId, userId, optionIdx]
     )
+
+    // Step 5: Shout into the Redis megaphone 📢
+    // This wakes up the subscriber in liveService.ts
+    // which then pushes fresh results to all connected WebSocket clients
+    await app.redis.publish('vote:cast', JSON.stringify({ pollId }))
+
     return { success: true, message: 'Vote recorded successfully' }
 
   } catch (err: unknown) {
-    // Error code 23505 = "unique constraint violation"
-    // This means: this user already voted on this poll
-    // Our database table has UNIQUE(poll_id, user_id) — one vote per person per poll
     if ((err as { code?: string }).code === '23505') {
       return { success: false, message: 'You have already voted on this poll' }
     }
-    throw err  // some other unexpected error — let it bubble up
+    throw err
   }
 }

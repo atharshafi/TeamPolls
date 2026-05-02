@@ -11,6 +11,10 @@ import websocketPlugin from './plugins/websocket.js'
 // Routes
 import { authRoutes } from './routes/auth.js'
 import { pollRoutes } from './routes/polls.js'
+import { liveRoutes } from './routes/live.js'
+
+// Services
+import { startRedisSubscriber } from './services/liveService.js'
 
 const app = Fastify({
   logger: {
@@ -25,15 +29,15 @@ const app = Fastify({
 })
 
 // ── Security headers ──────────────────────────────────
-await app.register(helmet, {
-  contentSecurityPolicy: false
-})
+await app.register(helmet, { contentSecurityPolicy: false })
 
 // ── Rate limiter ──────────────────────────────────────
-await app.register(rateLimit, {
-  max: 5,
-  timeWindow: '1 second'
-})
+if (process.env.NODE_ENV !== 'test') {
+  await app.register(rateLimit, {
+    max: 5,
+    timeWindow: '1 second'
+  })
+}
 
 // ── Plugins ───────────────────────────────────────────
 await app.register(postgresPlugin)
@@ -44,16 +48,17 @@ await app.register(websocketPlugin)
 // ── Routes ────────────────────────────────────────────
 await app.register(authRoutes)
 await app.register(pollRoutes)
+await app.register(liveRoutes)
+
+// ── Start Redis subscriber for live updates ───────────
+await startRedisSubscriber(app)
 
 // ── Health check ──────────────────────────────────────
 app.get('/health', async () => {
   return {
     status: 'ok',
     timestamp: new Date().toISOString(),
-    services: {
-      postgres: 'connected',
-      redis: 'connected'
-    }
+    services: { postgres: 'connected', redis: 'connected' }
   }
 })
 
