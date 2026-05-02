@@ -1,6 +1,7 @@
 import Fastify from 'fastify'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
+import cors from '@fastify/cors'
 
 // Plugins
 import postgresPlugin from './plugins/postgres.js'
@@ -30,6 +31,10 @@ const app = Fastify({
 
 // ── Security headers ──────────────────────────────────
 await app.register(helmet, { contentSecurityPolicy: false })
+
+await app.register(cors, {
+  origin: 'http://localhost:5173'
+})
 
 // ── Rate limiter ──────────────────────────────────────
 if (process.env.NODE_ENV !== 'test') {
